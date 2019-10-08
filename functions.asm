@@ -135,6 +135,8 @@ finished:
 ;@params eax(字符串首地址)
 sprintR:
     push   ebx
+    push   ecx
+    push   edx
     mov    ecx, eax  ;ecx保存字符串首地址
     call   slen      ;eax现在存有字符串长度
     add    eax, ecx
@@ -150,6 +152,73 @@ sprintRLoop:
     mov    eax, ecx
     jmp    sprintRLoop
 finishSprintR:
+    ;换行
+    push   eax
+    mov    eax, 0Ah
+    push   eax
+    mov    eax, esp    ;esp是栈指针，此时就相当于0Ah的起始地址
+    call   sprint
+    pop    eax
+    pop    eax
+    pop    edx
+    pop    ecx
     pop    ebx
     ret
-    
+
+;@name clearChar 清除残留字符
+;@params eax(起始地址)
+clearChar:
+    push   ebx
+    mov    ebx, 0
+clearCharLoop:
+    cmp    byte[eax+ebx], 0
+    jz     finishClearChar
+    mov    byte[eax+ebx], 0
+    inc    ebx
+    jmp    clearCharLoop
+finishClearChar:
+    pop    ebx
+    ret
+
+;@name copyStr 拷贝字符串
+;@params eax(源字符串首地址) ebx(目标地址)
+copyStr:
+    push   ecx
+    push   edx     ;dl临时储存字符
+    mov    ecx, 0  ;ecx储存偏移量
+copyLoop:
+    cmp    byte[eax+ecx], 0
+    jz     clearAim
+    mov    dl, byte[eax+ecx]
+    mov    byte[ebx+ecx], dl
+    inc    ecx
+    jmp    copyLoop
+clearAim:
+    cmp    byte[ebx+ecx], 0
+    jz     finishCopy
+    mov    byte[ebx+ecx], 0
+    inc    ecx
+    jmp    clearAim
+finishCopy:
+    pop    edx
+    pop    ecx
+    ret
+
+;@name leftShiftOne 左移一位
+;@param eax(首地址)
+leftShiftOne:
+    push   ebx  ;偏移量
+    push   ecx
+    mov    ebx, 0
+leftShiftOneLoop:
+    cmp    byte[eax+ebx+1], 0
+    jz     finishLeftShiftOne
+    mov    cl, byte[eax+ebx+1]
+    mov    byte[eax+ebx], cl
+    inc    ebx
+    jmp    leftShiftOneLoop
+finishLeftShiftOne:
+    mov    byte[eax+ebx], 0
+    pop    ecx
+    pop    ebx
+    ret
